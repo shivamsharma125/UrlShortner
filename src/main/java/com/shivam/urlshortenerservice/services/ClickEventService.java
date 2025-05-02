@@ -25,13 +25,14 @@ public class ClickEventService implements IClickEventService {
     private final UserAgentAnalyzer userAgentAnalyzer;
 
     @Override
-    public ClickEvent logClick(String shortCode, String ipAddress, String userAgentString, String referrer) {
+    public void logClick(String shortCode, String ipAddress, String userAgentString, String referrer) {
         ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
                 .orElseThrow(() -> new ShortCodeNotFoundException("Short URL not found"));
 
         UserAgent userAgent = userAgentAnalyzer.parse(userAgentString);
+        referrer = (referrer == null || referrer.isBlank()) ? "Direct" : referrer;
 
-        ClickEvent event = ClickEvent.builder()
+        ClickEvent clickEvent = ClickEvent.builder()
                 .clickedAt(new Date())
                 .ipAddress(ipAddress)
                 .browser(userAgent.getValue(UserAgent.AGENT_NAME))
@@ -41,7 +42,7 @@ public class ClickEventService implements IClickEventService {
                 .shortUrl(shortUrl)
                 .build();
 
-        return clickEventRepository.save(event);
+        clickEventRepository.save(clickEvent);
     }
 
     @Override
