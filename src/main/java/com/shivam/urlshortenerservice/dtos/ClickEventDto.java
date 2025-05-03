@@ -13,7 +13,6 @@ public class ClickEventDto {
     private String operatingSystem;
     private String deviceType;
     private String referrer;
-    // Format : "yyyy-MM-dd HH:mm:ss"
     private String clickedAt;
 }
 
