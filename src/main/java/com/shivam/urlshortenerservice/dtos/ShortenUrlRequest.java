@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class ShortenUrlRequest {
     private String originalUrl;
     private String customAlias; // optional
-    // Date Format : "YYYY-MM-DD 00:00:00"
-    private String expirationDate; // optional
+    // format: yyyy-MM-dd HH:mm:ss
+    private String expiresAt; // optional
 }

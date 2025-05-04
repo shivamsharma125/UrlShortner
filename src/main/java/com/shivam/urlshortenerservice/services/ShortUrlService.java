@@ -38,11 +38,10 @@ public class ShortUrlService implements IShortUrlService {
             throw new ShortCodeAlreadyExistException("Provided custom alias already exists.");
         }
 
-        ShortUrl shortUrl = ShortUrl.builder()
-                .originalUrl(originalUrl)
-                .shortCode(shortCode)
-                .expiresAt(expiresAt)
-                .build();
+        ShortUrl shortUrl = new ShortUrl();
+        shortUrl.setOriginalUrl(originalUrl);
+        shortUrl.setShortCode(shortCode);
+        shortUrl.setExpiresAt(expiresAt);
 
         shortUrl = shortUrlRepository.save(shortUrl);
 
@@ -58,11 +57,12 @@ public class ShortUrlService implements IShortUrlService {
         // Check shortCode in Redis first
         String cachedUrl = redisTemplate.opsForValue().get(shortCode);
         if (cachedUrl != null) {
-            LOGGER.debug("Returned long url from cache : " + cachedUrl);
-            return ShortUrl.builder()
-                    .originalUrl(cachedUrl)
-                    .shortCode(shortCode)
-                    .build();
+            LOGGER.debug("Returned long url from cache : {}", cachedUrl);
+            ShortUrl shortUrl = new ShortUrl();
+            shortUrl.setOriginalUrl(cachedUrl);
+            shortUrl.setShortCode(shortCode);
+
+            return shortUrl;
         }
 
         ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
@@ -76,7 +76,7 @@ public class ShortUrlService implements IShortUrlService {
         long ttl = (shortUrl.getExpiresAt().getTime() - System.currentTimeMillis()) / 1000;
         redisTemplate.opsForValue().set(shortCode, shortUrl.getOriginalUrl(), ttl, TimeUnit.SECONDS);
 
-        LOGGER.debug("Returned long url from DB : " + shortUrl.getShortCode());
+        LOGGER.debug("Returned long url from DB : {}", shortUrl.getShortCode());
         return shortUrl;
     }
 

@@ -12,7 +12,6 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Entity
 @Table(name = "short_urls", indexes = @Index(columnList = "shortCode"))
 public class ShortUrl extends BaseModel {

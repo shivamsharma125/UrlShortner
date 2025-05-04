@@ -24,19 +24,22 @@ public class ShortUrlController {
     @Value("${app.base-url}")
     private String baseUrl;
 
-    @PostMapping("shortener/shorten")
+    @PostMapping("/shortener/shorten")
     public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request) {
         ShortenUrlResponse response = new ShortenUrlResponse();
 
         ShortUrl shortUrl = shortUrlService.createShortUrl(
                 request.getOriginalUrl(),
                 request.getCustomAlias(),
-                request.getExpirationDate()
+                request.getExpiresAt()
         );
 
         response.setShortUrl(baseUrl + shortUrl.getShortCode());
+        response.setOriginalUrl(shortUrl.getOriginalUrl());
+        response.setCreatedAt(shortUrl.getCreatedAt());
+        response.setExpiredAt(shortUrl.getExpiresAt());
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{shortCode}")
