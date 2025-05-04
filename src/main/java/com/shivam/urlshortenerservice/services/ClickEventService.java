@@ -1,6 +1,6 @@
 package com.shivam.urlshortenerservice.services;
 
-import com.shivam.urlshortenerservice.dtos.ClickStatsPerDayResponse;
+import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
 import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
@@ -56,14 +56,6 @@ public class ClickEventService implements IClickEventService {
     }
 
     @Override
-    public List<ClickEvent> getClickEvents(String shortCode) {
-        if (!shortUrlRepository.existsByShortCode(shortCode))
-                throw new ShortCodeNotFoundException("Short URL not found");
-
-        return clickEventRepository.findByShortUrl_ShortCode(shortCode);
-    }
-
-    @Override
     public long getClickCount(String shortCode) {
         if (!shortUrlRepository.existsByShortCode(shortCode))
             throw new ShortCodeNotFoundException("Short URL not found");
@@ -76,7 +68,7 @@ public class ClickEventService implements IClickEventService {
                                                    String deviceType, int page, int size, String sort, String sortDirection) {
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date start=null, end=null;
+        Date start = null, end = null;
         try {
             start = (startDate != null) ? formatter.parse(startDate) : new Date(0); // from epoch
             end = (endDate != null) ? formatter.parse(endDate) : new Date(); // now
@@ -88,27 +80,50 @@ public class ClickEventService implements IClickEventService {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort));
 
         return clickEventRepository.findFilteredClickEvents(
-                        shortCode, start, end,
-                        browser != null ? browser : "",
-                        os != null ? os : "",
-                        deviceType != null ? deviceType : "",
-                        pageable
-                );
+                shortCode, start, end,
+                browser != null ? browser : "",
+                os != null ? os : "",
+                deviceType != null ? deviceType : "",
+                pageable
+        );
     }
 
     @Override
-    public List<ClickStatsPerDayResponse> getDailyClickStats(String shortCode) {
+    public List<ClickStatsDto> getDailyClickStats(String shortCode) {
         List<Object[]> dailyClickStats = clickEventRepository.getClickCountsPerDay(shortCode);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         return dailyClickStats.stream()
-                .map(dailyClickStat -> new ClickStatsPerDayResponse(
+                .map(dailyClickStat -> new ClickStatsDto(
                         shortCode,
                         formatter.format(dailyClickStat[0]),
-                        (Long)dailyClickStat[1]
+                        (Long) dailyClickStat[1]
                 ))
                 .collect(Collectors.toList());
     }
+
+    public List<ClickStatsDto> getStatsInDateRange(String shortCode, String start, String end) {
+        Date startDate = null, endDate = null;
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            startDate = formatter.parse(start);
+            endDate = formatter.parse(end);
+        } catch (ParseException e) {
+            throw new InvalidDateFormatException("Invalid date format. Use yyyy-MM-dd");
+        }
+
+        List<Object[]> clickStats = clickEventRepository
+                .getClickCountsPerDayBetweenDates(shortCode, startDate, endDate);
+
+        return clickStats.stream()
+                .map(clickStat -> new ClickStatsDto(
+                        shortCode,
+                        formatter.format(clickStat[0]),
+                        (Long) clickStat[1])
+                )
+                .collect(Collectors.toList());
+    }
+
 }
 

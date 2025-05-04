@@ -1,5 +1,6 @@
 package com.shivam.urlshortenerservice.repositories;
 
+import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,5 +29,13 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
             "FROM ClickEvent c WHERE c.shortUrl.shortCode = :shortCode " +
             "GROUP BY FUNCTION('DATE', c.clickedAt) ORDER BY FUNCTION('DATE', c.clickedAt) DESC")
     List<Object[]> getClickCountsPerDay(String shortCode);
+
+    @Query("SELECT FUNCTION('DATE', c.clickedAt), COUNT(c) " +
+            "FROM ClickEvent c " +
+            "WHERE c.shortUrl.shortCode = :shortCode " +
+            "AND c.clickedAt BETWEEN :startDate AND :endDate " +
+            "GROUP BY FUNCTION('DATE', c.clickedAt) " +
+            "ORDER BY FUNCTION('DATE', c.clickedAt) ASC")
+    List<Object[]> getClickCountsPerDayBetweenDates(String shortCode, Date startDate, Date endDate);
 }
 

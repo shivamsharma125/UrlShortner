@@ -2,7 +2,7 @@ package com.shivam.urlshortenerservice.controllers;
 
 import com.shivam.urlshortenerservice.dtos.AnalyticsResponse;
 import com.shivam.urlshortenerservice.dtos.ClickEventDto;
-import com.shivam.urlshortenerservice.dtos.ClickStatsPerDayResponse;
+import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import com.shivam.urlshortenerservice.services.IClickEventService;
 import lombok.RequiredArgsConstructor;
@@ -64,8 +64,19 @@ public class AnalyticsController {
     }
 
     @GetMapping("/{shortCode}/click-events/daily")
-    public ResponseEntity<List<ClickStatsPerDayResponse>> getDailyClickStats(@PathVariable String shortCode) {
+    public ResponseEntity<List<ClickStatsDto>> getDailyClickStats(@PathVariable String shortCode) {
         return new ResponseEntity<>(clickEventService.getDailyClickStats(shortCode), HttpStatus.OK);
     }
+
+    @GetMapping("/{shortCode}/click-events/range")
+    public ResponseEntity<List<ClickStatsDto>> getClickStatsInRange(
+            @PathVariable String shortCode,
+            @RequestParam String start, // Format : yyyy-MM-dd
+            @RequestParam String end // Format : yyyy-MM-dd
+    ) {
+        List<ClickStatsDto> clickStats = clickEventService.getStatsInDateRange(shortCode, start, end);
+        return new ResponseEntity<>(clickStats, HttpStatus.OK);
+    }
+
 }
 
