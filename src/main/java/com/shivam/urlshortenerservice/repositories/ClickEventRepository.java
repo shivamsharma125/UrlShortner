@@ -23,5 +23,10 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
             "AND LOWER(c.deviceType) LIKE LOWER(CONCAT('%', :deviceType, '%'))")
     Page<ClickEvent> findFilteredClickEvents(String shortCode, Date startDate, Date endDate, String browser,
                                              String os, String deviceType, Pageable pageable);
+
+    @Query("SELECT FUNCTION('DATE', c.clickedAt), COUNT(c) " +
+            "FROM ClickEvent c WHERE c.shortUrl.shortCode = :shortCode " +
+            "GROUP BY FUNCTION('DATE', c.clickedAt) ORDER BY FUNCTION('DATE', c.clickedAt) DESC")
+    List<Object[]> getClickCountsPerDay(String shortCode);
 }
 

@@ -1,5 +1,6 @@
 package com.shivam.urlshortenerservice.services;
 
+import com.shivam.urlshortenerservice.dtos.ClickStatsPerDayResponse;
 import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
@@ -21,6 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -92,6 +94,21 @@ public class ClickEventService implements IClickEventService {
                         deviceType != null ? deviceType : "",
                         pageable
                 );
+    }
+
+    @Override
+    public List<ClickStatsPerDayResponse> getDailyClickStats(String shortCode) {
+        List<Object[]> dailyClickStats = clickEventRepository.getClickCountsPerDay(shortCode);
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+        return dailyClickStats.stream()
+                .map(dailyClickStat -> new ClickStatsPerDayResponse(
+                        shortCode,
+                        formatter.format(dailyClickStat[0]),
+                        (Long)dailyClickStat[1]
+                ))
+                .collect(Collectors.toList());
     }
 }
 
