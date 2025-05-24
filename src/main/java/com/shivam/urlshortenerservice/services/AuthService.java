@@ -34,6 +34,7 @@ public class AuthService implements IAuthService {
         }
 
         User user = new User();
+        user.setName(name);
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         return userRepository.save(user);

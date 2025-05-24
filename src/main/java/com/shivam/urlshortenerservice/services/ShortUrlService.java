@@ -7,7 +7,6 @@ import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
 import com.shivam.urlshortenerservice.utils.ShortCodeUtil;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,7 +18,6 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@RequiredArgsConstructor
 public class ShortUrlService implements IShortUrlService {
 
     private final ShortUrlRepository shortUrlRepository;
@@ -27,6 +25,11 @@ public class ShortUrlService implements IShortUrlService {
 
     private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final Logger LOGGER = LoggerFactory.getLogger(ShortUrlService.class);
+
+    public ShortUrlService(ShortUrlRepository shortUrlRepository, StringRedisTemplate redisTemplate) {
+        this.shortUrlRepository = shortUrlRepository;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public ShortUrl createShortUrl(String originalUrl, String alias, String expirationDate) {
