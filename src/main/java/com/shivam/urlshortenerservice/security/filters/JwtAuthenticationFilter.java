@@ -1,6 +1,6 @@
 package com.shivam.urlshortenerservice.security.filters;
 
-import com.shivam.urlshortenerservice.services.JwtService;
+import com.shivam.urlshortenerservice.security.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

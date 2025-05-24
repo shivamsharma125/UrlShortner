@@ -1,6 +1,5 @@
-package com.shivam.urlshortenerservice.services;
+package com.shivam.urlshortenerservice.security.services;
 
-import com.shivam.urlshortenerservice.models.User;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -16,6 +15,7 @@ import java.util.Date;
 public class JwtService {
     @Value("${jwt.secret}")
     private String jwtSecret;
+    private static final long EXPIRATION= 1000L * 60 * 60 * 24 * 30; // 30 days
 
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
@@ -25,7 +25,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L*60*60*24*30))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
