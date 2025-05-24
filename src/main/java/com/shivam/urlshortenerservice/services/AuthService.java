@@ -4,7 +4,10 @@ import com.shivam.urlshortenerservice.exceptions.InvalidCredentialsException;
 import com.shivam.urlshortenerservice.exceptions.UserAlreadyExistsException;
 import com.shivam.urlshortenerservice.models.User;
 import com.shivam.urlshortenerservice.repositories.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +16,15 @@ public class AuthService implements IAuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, JwtService jwtService,
+                       PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -34,13 +41,12 @@ public class AuthService implements IAuthService {
 
     @Override
     public String login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email,password));
+        } catch (AuthenticationException ex) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
-        return jwtService.generateToken(user);
+        return jwtService.generateToken(email);
     }
 }
