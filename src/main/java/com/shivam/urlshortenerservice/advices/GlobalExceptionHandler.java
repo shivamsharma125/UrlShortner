@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(InvalidDateFormatException.class)
+    @ExceptionHandler({InvalidDateFormatException.class, InvalidRequestException.class})
     public ResponseEntity<String> handleInvalidDateFormat(Exception ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
