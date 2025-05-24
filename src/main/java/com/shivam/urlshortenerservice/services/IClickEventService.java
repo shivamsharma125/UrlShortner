@@ -1,6 +1,6 @@
 package com.shivam.urlshortenerservice.services;
 
-import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
+import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import org.springframework.data.domain.Page;
 
@@ -11,7 +11,7 @@ public interface IClickEventService {
     long getClickCount(String shortCode);
     Page<ClickEvent> getFilteredClickEvents(String shortCode, String startDate, String endDate, String browser, String os,
                                             String deviceType, int page, int size, String sort, String sortDirection);
-    List<ClickStatsDto> getDailyClickStats(String shortCode);
-    List<ClickStatsDto> getStatsInDateRange(String shortCode, String start, String end);
+    List<ClickStatsResponse> getDailyClickStats(String shortCode);
+    List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end);
 }
 

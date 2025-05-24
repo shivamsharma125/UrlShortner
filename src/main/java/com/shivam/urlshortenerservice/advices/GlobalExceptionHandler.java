@@ -1,10 +1,6 @@
 package com.shivam.urlshortenerservice.advices;
 
-import com.shivam.urlshortenerservice.dtos.ExceptionDto;
-import com.shivam.urlshortenerservice.exceptions.ExpiredShortCodeException;
-import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
-import com.shivam.urlshortenerservice.exceptions.ShortCodeAlreadyExistException;
-import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
+import com.shivam.urlshortenerservice.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,27 +10,32 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidDateFormatException.class)
-    public ResponseEntity<ExceptionDto> handleInvalidDateFormat(Exception ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> handleInvalidDateFormat(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ShortCodeNotFoundException.class)
-    public ResponseEntity<ExceptionDto> handleIllegalArgument(Exception ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<String> handleNotFound(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ExpiredShortCodeException.class)
-    public ResponseEntity<ExceptionDto> handleIllegalState(Exception ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.GONE);
+    public ResponseEntity<String> handleIllegalState(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.GONE);
     }
 
-    @ExceptionHandler(ShortCodeAlreadyExistException.class)
-    public ResponseEntity<ExceptionDto> handleConflict(Exception ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.CONFLICT);
+    @ExceptionHandler({ShortCodeAlreadyExistException.class, UserAlreadyExistsException.class})
+    public ResponseEntity<String> handleConflict(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ExceptionDto> handleGeneric(Exception ex) {
-        return new ResponseEntity<>(new ExceptionDto(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<String> handleGeneric(Exception ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<String> handleUnAuthorizedState(Exception ex){
+        return new ResponseEntity<>(ex.getMessage(),HttpStatus.UNAUTHORIZED);
     }
 }

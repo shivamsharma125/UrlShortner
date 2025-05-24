@@ -1,6 +1,5 @@
 package com.shivam.urlshortenerservice.repositories;
 
-import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

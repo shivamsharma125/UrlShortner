@@ -1,6 +1,6 @@
 package com.shivam.urlshortenerservice.services;
 
-import com.shivam.urlshortenerservice.dtos.ClickStatsDto;
+import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
 import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
@@ -89,13 +89,13 @@ public class ClickEventService implements IClickEventService {
     }
 
     @Override
-    public List<ClickStatsDto> getDailyClickStats(String shortCode) {
+    public List<ClickStatsResponse> getDailyClickStats(String shortCode) {
         List<Object[]> dailyClickStats = clickEventRepository.getClickCountsPerDay(shortCode);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         return dailyClickStats.stream()
-                .map(dailyClickStat -> new ClickStatsDto(
+                .map(dailyClickStat -> new ClickStatsResponse(
                         shortCode,
                         formatter.format(dailyClickStat[0]),
                         (Long) dailyClickStat[1]
@@ -103,7 +103,7 @@ public class ClickEventService implements IClickEventService {
                 .collect(Collectors.toList());
     }
 
-    public List<ClickStatsDto> getStatsInDateRange(String shortCode, String start, String end) {
+    public List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end) {
         Date startDate = null, endDate = null;
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         try {
@@ -117,7 +117,7 @@ public class ClickEventService implements IClickEventService {
                 .getClickCountsPerDayBetweenDates(shortCode, startDate, endDate);
 
         return clickStats.stream()
-                .map(clickStat -> new ClickStatsDto(
+                .map(clickStat -> new ClickStatsResponse(
                         shortCode,
                         formatter.format(clickStat[0]),
                         (Long) clickStat[1])

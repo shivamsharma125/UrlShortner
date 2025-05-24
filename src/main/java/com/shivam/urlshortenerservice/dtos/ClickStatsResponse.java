@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClickStatsDto {
+public class ClickStatsResponse {
     private String shortCode;
     private String date;
     private long count;

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClickEventDto {
+public class ClickEventResponse {
     private String ipAddress;
     private String browser;
     private String operatingSystem;
