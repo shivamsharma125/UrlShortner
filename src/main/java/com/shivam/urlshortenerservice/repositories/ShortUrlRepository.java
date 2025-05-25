@@ -13,4 +13,5 @@ public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
     Optional<ShortUrl> findByShortCode(String shortCode);
     boolean existsByShortCode(String shortCode);
     Page<ShortUrl> findByCreatedBy_Email(String email, Pageable pageable);
+    void deleteByShortCode(String shortCode);
 }

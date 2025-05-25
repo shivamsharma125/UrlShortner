@@ -69,7 +69,7 @@ public class ShortUrlController {
         return new ResponseEntity<>("Redirecting to: " + shortUrl.getOriginalUrl(), headers, HttpStatus.FOUND);
     }
 
-    @GetMapping("/shorturls")
+    @GetMapping("shortener/shorturls")
     public ResponseEntity<List<ShortenUrlResponse>> getUserShortUrls(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -84,6 +84,14 @@ public class ShortUrlController {
                 .toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/shortener/{shortCode}")
+    public ResponseEntity<Void> deleteShortUrl(@PathVariable String shortCode,
+                                               Authentication authentication) {
+        String email = authentication.getName();
+        shortUrlService.deleteShortUrl(shortCode, email);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     private ShortenUrlResponse from(ShortUrl shortUrl){

@@ -1,9 +1,6 @@
 package com.shivam.urlshortenerservice.services;
 
-import com.shivam.urlshortenerservice.exceptions.ExpiredShortCodeException;
-import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
-import com.shivam.urlshortenerservice.exceptions.ShortCodeAlreadyExistException;
-import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
+import com.shivam.urlshortenerservice.exceptions.*;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.models.User;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
@@ -18,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -108,6 +106,19 @@ public class ShortUrlService implements IShortUrlService {
             code = ShortCodeUtil.generateRandomCode(6);
         } while (shortUrlRepository.existsByShortCode(code));
         return code;
+    }
+
+    @Transactional
+    @Override
+    public void deleteShortUrl(String shortCode, String userEmail) {
+        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL not found"));
+
+        if(!shortUrl.getCreatedBy().getEmail().equals(userEmail)){
+            throw new ForbiddenOperationException("user is not allowed to delete this url");
+        }
+
+        shortUrlRepository.deleteByShortCode(shortCode);
     }
 
     private Date getExpirationDate(String expirationDate) {
