@@ -1,7 +1,7 @@
 package com.shivam.urlshortenerservice.controllers;
 
-import com.shivam.urlshortenerservice.dtos.ShortenUrlRequest;
-import com.shivam.urlshortenerservice.dtos.ShortenUrlResponse;
+import com.shivam.urlshortenerservice.dtos.ShortUrlRequest;
+import com.shivam.urlshortenerservice.dtos.ShortUrlResponse;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.services.IClickEventService;
 import com.shivam.urlshortenerservice.services.IShortUrlService;
@@ -35,7 +35,7 @@ public class ShortUrlController {
     }
 
     @PostMapping("/shortener/shorten")
-    public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request,
+    public ResponseEntity<ShortUrlResponse> shortenUrl(@RequestBody ShortUrlRequest request,
                                                        @AuthenticationPrincipal UserDetails userDetails) {
 
         String email = userDetails.getUsername();
@@ -70,7 +70,7 @@ public class ShortUrlController {
     }
 
     @GetMapping("shortener/shorturls")
-    public ResponseEntity<List<ShortenUrlResponse>> getUserShortUrls(
+    public ResponseEntity<List<ShortUrlResponse>> getUserShortUrls(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
@@ -79,7 +79,7 @@ public class ShortUrlController {
 
         Page<ShortUrl> shortUrlPage = shortUrlService.getShortUrlsForUser(email,page,size);
 
-        List<ShortenUrlResponse> response = shortUrlPage.stream()
+        List<ShortUrlResponse> response = shortUrlPage.stream()
                 .map(this::from)
                 .toList();
 
@@ -94,8 +94,8 @@ public class ShortUrlController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    private ShortenUrlResponse from(ShortUrl shortUrl){
-        ShortenUrlResponse response = new ShortenUrlResponse();
+    private ShortUrlResponse from(ShortUrl shortUrl){
+        ShortUrlResponse response = new ShortUrlResponse();
         response.setShortUrl(baseUrl + shortUrl.getShortCode());
         response.setOriginalUrl(shortUrl.getOriginalUrl());
         response.setCreatedAt(DateUtils.formatDate(shortUrl.getCreatedAt()));

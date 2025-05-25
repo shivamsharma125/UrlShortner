@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortenUrlRequest {
+public class ShortUrlRequest {
     private String originalUrl;
     private String customAlias; // optional
     // format: yyyy-MM-dd HH:mm:ss
