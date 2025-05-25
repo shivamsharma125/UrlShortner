@@ -11,6 +11,10 @@ import com.shivam.urlshortenerservice.repositories.UserRepository;
 import com.shivam.urlshortenerservice.utils.ShortCodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -90,6 +94,12 @@ public class ShortUrlService implements IShortUrlService {
 
         LOGGER.debug("Returned long url from DB : {}", shortUrl.getShortCode());
         return shortUrl;
+    }
+
+    @Override
+    public Page<ShortUrl> getShortUrlsForUser(String email, int page, int size) {
+        Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
+        return shortUrlRepository.findByCreatedBy_Email(email,pageable);
     }
 
     private String generateUniqueCode() {

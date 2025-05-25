@@ -5,15 +5,20 @@ import com.shivam.urlshortenerservice.dtos.ShortenUrlResponse;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.services.IClickEventService;
 import com.shivam.urlshortenerservice.services.IShortUrlService;
+import com.shivam.urlshortenerservice.utils.DateUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping
@@ -35,8 +40,6 @@ public class ShortUrlController {
 
         String email = userDetails.getUsername();
 
-        ShortenUrlResponse response = new ShortenUrlResponse();
-
         ShortUrl shortUrl = shortUrlService.createShortUrl(
                 request.getOriginalUrl(),
                 request.getCustomAlias(),
@@ -44,12 +47,9 @@ public class ShortUrlController {
                 email
         );
 
-        response.setShortUrl(baseUrl + shortUrl.getShortCode());
-        response.setOriginalUrl(shortUrl.getOriginalUrl());
-        response.setCreatedAt(shortUrl.getCreatedAt());
-        response.setExpiredAt(shortUrl.getExpiresAt());
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+
+        return new ResponseEntity<>(from(shortUrl), HttpStatus.CREATED);
     }
 
     @GetMapping("/{shortCode}")
@@ -67,6 +67,32 @@ public class ShortUrlController {
         headers.add("Location", shortUrl.getOriginalUrl());
 
         return new ResponseEntity<>("Redirecting to: " + shortUrl.getOriginalUrl(), headers, HttpStatus.FOUND);
+    }
+
+    @GetMapping("/shorturls")
+    public ResponseEntity<List<ShortenUrlResponse>> getUserShortUrls(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Page<ShortUrl> shortUrlPage = shortUrlService.getShortUrlsForUser(email,page,size);
+
+        List<ShortenUrlResponse> response = shortUrlPage.stream()
+                .map(this::from)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    private ShortenUrlResponse from(ShortUrl shortUrl){
+        ShortenUrlResponse response = new ShortenUrlResponse();
+        response.setShortUrl(baseUrl + shortUrl.getShortCode());
+        response.setOriginalUrl(shortUrl.getOriginalUrl());
+        response.setCreatedAt(DateUtils.formatDate(shortUrl.getCreatedAt()));
+        response.setExpiredAt(DateUtils.formatDate(shortUrl.getExpiresAt()));
+        return response;
     }
 }
 
