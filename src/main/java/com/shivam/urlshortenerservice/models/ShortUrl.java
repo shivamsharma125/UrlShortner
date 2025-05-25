@@ -1,10 +1,10 @@
 package com.shivam.urlshortenerservice.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
-import lombok.*;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 
@@ -19,8 +19,11 @@ public class ShortUrl extends BaseModel {
     private String originalUrl;
     @Column(nullable = false, unique = true, length = 20)
     private String shortCode;
-    @Column
+    @Column(nullable = false)
     private Date expiresAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User createdBy; // [M:1]
 }
 
 

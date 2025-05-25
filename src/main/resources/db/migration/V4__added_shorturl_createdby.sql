@@ -1,0 +1,5 @@
+ALTER TABLE short_urls
+    ADD user_id BIGINT NOT NULL;
+
+ALTER TABLE short_urls
+    ADD CONSTRAINT FK_SHORT_URLS_ON_USER FOREIGN KEY (user_id) REFERENCES users (id);

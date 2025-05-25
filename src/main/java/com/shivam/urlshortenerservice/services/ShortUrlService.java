@@ -5,11 +5,14 @@ import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeAlreadyExistException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ShortUrl;
+import com.shivam.urlshortenerservice.models.User;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
+import com.shivam.urlshortenerservice.repositories.UserRepository;
 import com.shivam.urlshortenerservice.utils.ShortCodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -22,17 +25,22 @@ public class ShortUrlService implements IShortUrlService {
 
     private final ShortUrlRepository shortUrlRepository;
     private final StringRedisTemplate redisTemplate;
+    private final UserRepository userRepository;
 
     private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final Logger LOGGER = LoggerFactory.getLogger(ShortUrlService.class);
 
-    public ShortUrlService(ShortUrlRepository shortUrlRepository, StringRedisTemplate redisTemplate) {
+    public ShortUrlService(ShortUrlRepository shortUrlRepository, StringRedisTemplate redisTemplate,
+                           UserRepository userRepository) {
         this.shortUrlRepository = shortUrlRepository;
         this.redisTemplate = redisTemplate;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public ShortUrl createShortUrl(String originalUrl, String alias, String expirationDate) {
+    public ShortUrl createShortUrl(String originalUrl, String alias, String expirationDate, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("user not found"));
 
         String shortCode = alias != null && !alias.isBlank() ? alias : generateUniqueCode();
         Date expiresAt = getExpirationDate(expirationDate);
@@ -45,6 +53,7 @@ public class ShortUrlService implements IShortUrlService {
         shortUrl.setOriginalUrl(originalUrl);
         shortUrl.setShortCode(shortCode);
         shortUrl.setExpiresAt(expiresAt);
+        shortUrl.setCreatedBy(user);
 
         shortUrl = shortUrlRepository.save(shortUrl);
 

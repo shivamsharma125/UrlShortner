@@ -6,17 +6,17 @@ import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.services.IClickEventService;
 import com.shivam.urlshortenerservice.services.IShortUrlService;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping
-@RequiredArgsConstructor
 public class ShortUrlController {
 
     private final IShortUrlService shortUrlService;
@@ -24,14 +24,24 @@ public class ShortUrlController {
     @Value("${app.base-url}")
     private String baseUrl;
 
+    public ShortUrlController(IShortUrlService shortUrlService, IClickEventService clickEventService) {
+        this.shortUrlService = shortUrlService;
+        this.clickEventService = clickEventService;
+    }
+
     @PostMapping("/shortener/shorten")
-    public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request) {
+    public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request,
+                                                         @AuthenticationPrincipal UserDetails userDetails) {
+
+        String email = userDetails.getUsername();
+
         ShortenUrlResponse response = new ShortenUrlResponse();
 
         ShortUrl shortUrl = shortUrlService.createShortUrl(
                 request.getOriginalUrl(),
                 request.getCustomAlias(),
-                request.getExpiresAt()
+                request.getExpiresAt(),
+                email
         );
 
         response.setShortUrl(baseUrl + shortUrl.getShortCode());
