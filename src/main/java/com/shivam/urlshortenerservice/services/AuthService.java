@@ -1,6 +1,7 @@
 package com.shivam.urlshortenerservice.services;
 
 import com.shivam.urlshortenerservice.exceptions.InvalidCredentialsException;
+import com.shivam.urlshortenerservice.exceptions.RoleNotFoundException;
 import com.shivam.urlshortenerservice.exceptions.UserAlreadyExistsException;
 import com.shivam.urlshortenerservice.models.Role;
 import com.shivam.urlshortenerservice.models.User;
@@ -47,7 +48,7 @@ public class AuthService implements IAuthService {
 
         Set<Role> roles = rolesStr.stream()
                 .map(roleName -> roleRepository.findByName(roleName)
-                        .orElse(roleRepository.save(new Role(roleName))))
+                        .orElseThrow(() -> new RoleNotFoundException("role '" + roleName + "' does not exist")))
                 .collect(Collectors.toSet());
 
         user.setRoles(roles);

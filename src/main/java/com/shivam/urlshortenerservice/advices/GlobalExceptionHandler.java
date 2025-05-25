@@ -14,7 +14,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ShortCodeNotFoundException.class)
+    @ExceptionHandler({ShortCodeNotFoundException.class, RoleNotFoundException.class})
     public ResponseEntity<String> handleNotFound(Exception ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
