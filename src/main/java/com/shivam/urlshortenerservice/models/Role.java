@@ -1,19 +1,18 @@
-package com.shivam.urlshortenerservice.dtos;
+package com.shivam.urlshortenerservice.models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Set;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignUpRequest {
+@Entity
+@Table(name = "roles")
+public class Role extends BaseModel {
     private String name;
-    private String email;
-    private String password;
-    private Set<String> roles;
 }

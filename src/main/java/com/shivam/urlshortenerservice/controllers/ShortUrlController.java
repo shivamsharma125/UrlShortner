@@ -36,7 +36,7 @@ public class ShortUrlController {
 
     @PostMapping("/shortener/shorten")
     public ResponseEntity<ShortenUrlResponse> shortenUrl(@RequestBody ShortenUrlRequest request,
-                                                         @AuthenticationPrincipal UserDetails userDetails) {
+                                                       @AuthenticationPrincipal UserDetails userDetails) {
 
         String email = userDetails.getUsername();
 
