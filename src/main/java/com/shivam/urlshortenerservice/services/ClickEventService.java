@@ -5,6 +5,7 @@ import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import com.shivam.urlshortenerservice.models.ShortUrl;
+import com.shivam.urlshortenerservice.models.State;
 import com.shivam.urlshortenerservice.repositories.ClickEventRepository;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,8 @@ public class ClickEventService implements IClickEventService {
 
     @Override
     public void logClick(String shortCode, String ipAddress, String userAgentString, String referrer) {
-        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
-                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL not found"));
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode, State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
 
         UserAgent userAgent = userAgentAnalyzer.parse(userAgentString);
         referrer = (referrer == null || referrer.isBlank()) ? "Direct" : referrer;

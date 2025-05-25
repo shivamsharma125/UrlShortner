@@ -2,6 +2,7 @@ package com.shivam.urlshortenerservice.services;
 
 import com.shivam.urlshortenerservice.exceptions.*;
 import com.shivam.urlshortenerservice.models.ShortUrl;
+import com.shivam.urlshortenerservice.models.State;
 import com.shivam.urlshortenerservice.models.User;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
 import com.shivam.urlshortenerservice.repositories.UserRepository;
@@ -79,8 +80,8 @@ public class ShortUrlService implements IShortUrlService {
             return shortUrl;
         }
 
-        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
-                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL not found"));
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
 
         if (shortUrl.getExpiresAt() != null && shortUrl.getExpiresAt().before(new Date())) {
             throw new ExpiredShortCodeException("Short URL has expired");
@@ -97,7 +98,7 @@ public class ShortUrlService implements IShortUrlService {
     @Override
     public Page<ShortUrl> getShortUrlsForUser(String email, int page, int size) {
         Pageable pageable = PageRequest.of(page,size, Sort.by("createdAt").descending());
-        return shortUrlRepository.findByCreatedBy_Email(email,pageable);
+        return shortUrlRepository.findAllByCreatedBy_EmailAndState(email,State.ACTIVE,pageable);
     }
 
     private String generateUniqueCode() {
@@ -111,14 +112,16 @@ public class ShortUrlService implements IShortUrlService {
     @Transactional
     @Override
     public void deleteShortUrl(String shortCode, String userEmail) {
-        ShortUrl shortUrl = shortUrlRepository.findByShortCode(shortCode)
-                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL not found"));
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
 
         if(!shortUrl.getCreatedBy().getEmail().equals(userEmail)){
             throw new ForbiddenOperationException("user is not allowed to delete this url");
         }
 
-        shortUrlRepository.deleteByShortCode(shortCode);
+        shortUrl.setState(State.DELETED);
+
+        shortUrlRepository.save(shortUrl);
     }
 
     private Date getExpirationDate(String expirationDate) {
