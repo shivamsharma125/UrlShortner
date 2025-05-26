@@ -1,6 +1,7 @@
 package com.shivam.urlshortenerservice.services;
 
 import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
+import com.shivam.urlshortenerservice.exceptions.ForbiddenOperationException;
 import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
@@ -57,16 +58,15 @@ public class ClickEventService implements IClickEventService {
     }
 
     @Override
-    public long getClickCount(String shortCode) {
-        if (!shortUrlRepository.existsByShortCode(shortCode))
-            throw new ShortCodeNotFoundException("Short URL not found");
-
+    public long getClickCount(String shortCode, String userEmail) {
+        checkForShortCodeOwnership(shortCode,userEmail);
         return clickEventRepository.countByShortCode(shortCode);
     }
 
     @Override
     public Page<ClickEvent> getFilteredClickEvents(String shortCode, String startDate, String endDate, String browser, String os,
-                                                   String deviceType, int page, int size, String sort, String sortDirection) {
+                                                   String deviceType, int page, int size, String sort, String sortDirection, String userEmail) {
+        checkForShortCodeOwnership(shortCode,userEmail);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date start = null, end = null;
@@ -90,7 +90,9 @@ public class ClickEventService implements IClickEventService {
     }
 
     @Override
-    public List<ClickStatsResponse> getDailyClickStats(String shortCode) {
+    public List<ClickStatsResponse> getDailyClickStats(String shortCode, String userEmail) {
+        checkForShortCodeOwnership(shortCode,userEmail);
+
         List<Object[]> dailyClickStats = clickEventRepository.getClickCountsPerDay(shortCode);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -104,7 +106,9 @@ public class ClickEventService implements IClickEventService {
                 .collect(Collectors.toList());
     }
 
-    public List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end) {
+    public List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end, String userEmail) {
+        checkForShortCodeOwnership(shortCode,userEmail);
+
         Date startDate = null, endDate = null;
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         try {
@@ -126,5 +130,13 @@ public class ClickEventService implements IClickEventService {
                 .collect(Collectors.toList());
     }
 
+    private void checkForShortCodeOwnership(String shortCode, String userEmail){
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
+
+        if(!shortUrl.getCreatedBy().getEmail().equals(userEmail)){
+            throw new ForbiddenOperationException("user is not the owner of this url");
+        }
+    }
 }
 

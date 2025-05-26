@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 
 public interface IShortUrlService {
     ShortUrl createShortUrl(String originalUrl, String alias, String expirationDate, String userEmail);
-    ShortUrl getOriginalUrl(String shortUrl);
+    ShortUrl getShortUrl(String shortCode, String userEmail);
     Page<ShortUrl> getShortUrlsForUser(String email, int page, int size);
     void deleteShortUrl(String shortCode, String userEmail);
 }

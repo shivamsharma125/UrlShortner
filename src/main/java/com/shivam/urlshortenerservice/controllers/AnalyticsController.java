@@ -9,21 +9,24 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shortener/analytics")
+@RequestMapping("/analytics")
 @RequiredArgsConstructor
 public class AnalyticsController {
 
     private final IClickEventService clickEventService;
 
     @GetMapping("/{shortCode}/click-count")
-    public ResponseEntity<AnalyticsResponse> getAnalytics(@PathVariable String shortCode) {
-        long clickCount = clickEventService.getClickCount(shortCode);
+    public ResponseEntity<AnalyticsResponse> getAnalytics(@PathVariable String shortCode,
+                                                          Authentication authentication) {
+        String email = authentication.getName();
+        long clickCount = clickEventService.getClickCount(shortCode,email);
 
         AnalyticsResponse response = new AnalyticsResponse();
         response.setShortCode(shortCode);
@@ -43,10 +46,13 @@ public class AnalyticsController {
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String browser,
             @RequestParam(required = false) String os,
-            @RequestParam(required = false) String deviceType
+            @RequestParam(required = false) String deviceType,
+            Authentication authentication
     ) {
+        String email = authentication.getName();
         Page<ClickEvent> clickEvents = clickEventService
-                .getFilteredClickEvents(shortCode, startDate, endDate, browser, os, deviceType, page, size, sort, direction);
+                .getFilteredClickEvents(shortCode, startDate, endDate, browser, os, deviceType,
+                        page, size, sort, direction,email);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -64,17 +70,23 @@ public class AnalyticsController {
     }
 
     @GetMapping("/{shortCode}/click-events/daily")
-    public ResponseEntity<List<ClickStatsResponse>> getDailyClickStats(@PathVariable String shortCode) {
-        return new ResponseEntity<>(clickEventService.getDailyClickStats(shortCode), HttpStatus.OK);
+    public ResponseEntity<List<ClickStatsResponse>> getDailyClickStats(@PathVariable String shortCode,
+                                                                       Authentication authentication) {
+        String email = authentication.getName();
+        List<ClickStatsResponse> responses = clickEventService.getDailyClickStats(shortCode,email);
+        return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
     @GetMapping("/{shortCode}/click-events/range")
     public ResponseEntity<List<ClickStatsResponse>> getClickStatsInRange(
             @PathVariable String shortCode,
             @RequestParam String start, // Format : yyyy-MM-dd
-            @RequestParam String end // Format : yyyy-MM-dd
+            @RequestParam String end, // Format : yyyy-MM-dd
+            Authentication authentication
     ) {
-        List<ClickStatsResponse> clickStats = clickEventService.getStatsInDateRange(shortCode, start, end);
+        String email = authentication.getName();
+        List<ClickStatsResponse> clickStats = clickEventService
+                .getStatsInDateRange(shortCode, start, end, email);
         return new ResponseEntity<>(clickStats, HttpStatus.OK);
     }
 

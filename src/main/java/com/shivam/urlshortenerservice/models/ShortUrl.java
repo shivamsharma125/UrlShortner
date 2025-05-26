@@ -21,7 +21,7 @@ public class ShortUrl extends BaseModel {
     private String shortCode;
     @Column(nullable = false)
     private Date expiresAt;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User createdBy; // [M:1]
 }

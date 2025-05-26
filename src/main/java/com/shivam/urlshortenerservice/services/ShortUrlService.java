@@ -1,12 +1,15 @@
 package com.shivam.urlshortenerservice.services;
 
-import com.shivam.urlshortenerservice.exceptions.*;
+import com.shivam.urlshortenerservice.exceptions.ForbiddenOperationException;
+import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
+import com.shivam.urlshortenerservice.exceptions.ShortCodeAlreadyExistException;
+import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.models.State;
 import com.shivam.urlshortenerservice.models.User;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
 import com.shivam.urlshortenerservice.repositories.UserRepository;
-import com.shivam.urlshortenerservice.utils.ShortCodeUtil;
+import com.shivam.urlshortenerservice.utils.ShortUrlUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -16,7 +19,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -48,7 +50,7 @@ public class ShortUrlService implements IShortUrlService {
         String shortCode = alias != null && !alias.isBlank() ? alias : generateUniqueCode();
         Date expiresAt = getExpirationDate(expirationDate);
 
-        if (shortUrlRepository.existsByShortCode(shortCode)) {
+        if (shortUrlRepository.existsByShortCodeAndState(shortCode,State.ACTIVE)) {
             throw new ShortCodeAlreadyExistException("Provided custom alias already exists.");
         }
 
@@ -68,30 +70,13 @@ public class ShortUrlService implements IShortUrlService {
     }
 
     @Override
-    public ShortUrl getOriginalUrl(String shortCode) {
-        // Check shortCode in Redis first
-        String cachedUrl = redisTemplate.opsForValue().get(shortCode);
-        if (cachedUrl != null) {
-            LOGGER.debug("Returned long url from cache : {}", cachedUrl);
-            ShortUrl shortUrl = new ShortUrl();
-            shortUrl.setOriginalUrl(cachedUrl);
-            shortUrl.setShortCode(shortCode);
+    public ShortUrl getShortUrl(String shortCode, String userEmail) {
+        ShortUrl shortUrl = checkForShortCodeOwnership(shortCode,userEmail);
 
-            return shortUrl;
-        }
-
-        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
-                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
-
-        if (shortUrl.getExpiresAt() != null && shortUrl.getExpiresAt().before(new Date())) {
-            throw new ExpiredShortCodeException("Short URL has expired");
-        }
-
-        // Save in Redis
+        // Cache in Redis
         long ttl = (shortUrl.getExpiresAt().getTime() - System.currentTimeMillis()) / 1000;
         redisTemplate.opsForValue().set(shortCode, shortUrl.getOriginalUrl(), ttl, TimeUnit.SECONDS);
 
-        LOGGER.debug("Returned long url from DB : {}", shortUrl.getShortCode());
         return shortUrl;
     }
 
@@ -101,27 +86,24 @@ public class ShortUrlService implements IShortUrlService {
         return shortUrlRepository.findAllByCreatedBy_EmailAndState(email,State.ACTIVE,pageable);
     }
 
-    private String generateUniqueCode() {
-        String code;
-        do {
-            code = ShortCodeUtil.generateRandomCode(6);
-        } while (shortUrlRepository.existsByShortCode(code));
-        return code;
-    }
-
-    @Transactional
     @Override
     public void deleteShortUrl(String shortCode, String userEmail) {
-        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
-                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
-
-        if(!shortUrl.getCreatedBy().getEmail().equals(userEmail)){
-            throw new ForbiddenOperationException("user is not allowed to delete this url");
-        }
+        ShortUrl shortUrl = checkForShortCodeOwnership(shortCode,userEmail);
 
         shortUrl.setState(State.DELETED);
 
+        // Delete from cache
+        redisTemplate.delete(shortCode);
+
         shortUrlRepository.save(shortUrl);
+    }
+
+    private String generateUniqueCode() {
+        String code;
+        do {
+            code = ShortUrlUtil.generateRandomCode(6);
+        } while (shortUrlRepository.existsByShortCodeAndState(code,State.ACTIVE));
+        return code;
     }
 
     private Date getExpirationDate(String expirationDate) {
@@ -138,5 +120,16 @@ public class ShortUrlService implements IShortUrlService {
         }
 
         return expiresAt;
+    }
+
+    private ShortUrl checkForShortCodeOwnership(String shortCode, String userEmail){
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
+
+        if(!shortUrl.getCreatedBy().getEmail().equals(userEmail)){
+            throw new ForbiddenOperationException("user is not the owner of this url");
+        }
+
+        return shortUrl;
     }
 }

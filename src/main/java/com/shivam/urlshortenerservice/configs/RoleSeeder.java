@@ -3,7 +3,6 @@ package com.shivam.urlshortenerservice.configs;
 import com.shivam.urlshortenerservice.models.Role;
 import com.shivam.urlshortenerservice.repositories.RoleRepository;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;

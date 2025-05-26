@@ -8,10 +8,10 @@ import java.util.List;
 
 public interface IClickEventService {
     void logClick(String shortCode, String ipAddress, String userAgent, String referrer);
-    long getClickCount(String shortCode);
+    long getClickCount(String shortCode, String userEmail);
     Page<ClickEvent> getFilteredClickEvents(String shortCode, String startDate, String endDate, String browser, String os,
-                                            String deviceType, int page, int size, String sort, String sortDirection);
-    List<ClickStatsResponse> getDailyClickStats(String shortCode);
-    List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end);
+                                            String deviceType, int page, int size, String sort, String sortDirection, String userEmail);
+    List<ClickStatsResponse> getDailyClickStats(String shortCode, String userEmail);
+    List<ClickStatsResponse> getStatsInDateRange(String shortCode, String start, String end, String userEmail);
 }
 
