@@ -21,13 +21,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnalyticsController {
 
-    private final IAnalyticsService clickEventService;
+    private final IAnalyticsService analyticsService;
 
     @GetMapping("/{shortCode}/click-count")
     public ResponseEntity<AnalyticsResponse> getAnalytics(@PathVariable String shortCode,
                                                           Authentication authentication) {
         String email = authentication.getName();
-        long clickCount = clickEventService.getClickCount(shortCode,email);
+        long clickCount = analyticsService.getClickCount(shortCode,email);
 
         AnalyticsResponse response = new AnalyticsResponse();
         response.setShortCode(shortCode);
@@ -51,7 +51,7 @@ public class AnalyticsController {
             Authentication authentication
     ) {
         String email = authentication.getName();
-        Page<ClickEvent> clickEvents = clickEventService
+        Page<ClickEvent> clickEvents = analyticsService
                 .getFilteredClickEvents(shortCode, startDate, endDate, browser, os, deviceType,
                         page, size, sort, direction,email);
 
@@ -74,7 +74,7 @@ public class AnalyticsController {
     public ResponseEntity<List<ClickStatsResponse>> getDailyClickStats(@PathVariable String shortCode,
                                                                        Authentication authentication) {
         String email = authentication.getName();
-        List<ClickStatsResponse> responses = clickEventService.getDailyClickStats(shortCode,email);
+        List<ClickStatsResponse> responses = analyticsService.getDailyClickStats(shortCode,email);
         return new ResponseEntity<>(responses, HttpStatus.OK);
     }
 
@@ -86,7 +86,7 @@ public class AnalyticsController {
             Authentication authentication
     ) {
         String email = authentication.getName();
-        List<ClickStatsResponse> clickStats = clickEventService
+        List<ClickStatsResponse> clickStats = analyticsService
                 .getStatsInDateRange(shortCode, start, end, email);
         return new ResponseEntity<>(clickStats, HttpStatus.OK);
     }
@@ -94,7 +94,7 @@ public class AnalyticsController {
     @GetMapping("/admin/top-clicked")
     public ResponseEntity<List<TopClickedResponse>> getTopClickedUrls(
             @RequestParam(defaultValue = "5") int count) {
-        return ResponseEntity.ok(clickEventService.getTopClickedUrls(count));
+        return ResponseEntity.ok(analyticsService.getTopClickedUrls(count));
     }
 }
 

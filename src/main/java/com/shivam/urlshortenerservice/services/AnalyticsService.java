@@ -33,7 +33,7 @@ public class AnalyticsService implements IAnalyticsService {
 
     private final Logger LOGGER = LoggerFactory.getLogger(AnalyticsService.class);
 
-    private final AnalyticsRepository clickEventRepository;
+    private final AnalyticsRepository analyticsRepository;
     private final ShortUrlRepository shortUrlRepository;
     private final UserAgentAnalyzer userAgentAnalyzer;
 
@@ -55,13 +55,13 @@ public class AnalyticsService implements IAnalyticsService {
                 .shortUrl(shortUrl)
                 .build();
 
-        clickEventRepository.save(clickEvent);
+        analyticsRepository.save(clickEvent);
     }
 
     @Override
     public long getClickCount(String shortCode, String userEmail) {
         checkForShortCodeOwnership(shortCode,userEmail);
-        return clickEventRepository.countByShortCode(shortCode);
+        return analyticsRepository.countByShortCode(shortCode);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class AnalyticsService implements IAnalyticsService {
         Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort));
 
-        return clickEventRepository.findFilteredClickEvents(
+        return analyticsRepository.findFilteredClickEvents(
                 shortCode, start, end,
                 browser != null ? browser : "",
                 os != null ? os : "",
@@ -94,7 +94,7 @@ public class AnalyticsService implements IAnalyticsService {
     public List<ClickStatsResponse> getDailyClickStats(String shortCode, String userEmail) {
         checkForShortCodeOwnership(shortCode,userEmail);
 
-        List<Object[]> dailyClickStats = clickEventRepository.getClickCountsPerDay(shortCode);
+        List<Object[]> dailyClickStats = analyticsRepository.getClickCountsPerDay(shortCode);
 
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -119,7 +119,7 @@ public class AnalyticsService implements IAnalyticsService {
             throw new InvalidDateFormatException("Invalid date format. Use yyyy-MM-dd");
         }
 
-        List<Object[]> clickStats = clickEventRepository
+        List<Object[]> clickStats = analyticsRepository
                 .getClickCountsPerDayBetweenDates(shortCode, startDate, endDate);
 
         return clickStats.stream()
@@ -133,7 +133,7 @@ public class AnalyticsService implements IAnalyticsService {
 
     @Override
     public List<TopClickedResponse> getTopClickedUrls(int count) {
-        List<Object[]> clickStats = clickEventRepository.findTopClickedUrls(count);
+        List<Object[]> clickStats = analyticsRepository.findTopClickedUrls(count);
         return clickStats.stream()
                 .map(clickStat -> new TopClickedResponse((String) clickStat[0], (Long) clickStat[1]))
                 .toList();
