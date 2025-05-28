@@ -12,8 +12,7 @@ import java.util.Optional;
 @Repository
 public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
     Optional<ShortUrl> findByShortCodeAndState(String shortCode, State state);
-
     boolean existsByShortCodeAndState(String shortCode, State state);
-
     Page<ShortUrl> findAllByCreatedBy_EmailAndState(String email, State state, Pageable pageable);
+    Page<ShortUrl> findAllByState(State state, Pageable pageable);
 }

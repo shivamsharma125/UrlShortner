@@ -3,8 +3,9 @@ package com.shivam.urlshortenerservice.controllers;
 import com.shivam.urlshortenerservice.dtos.AnalyticsResponse;
 import com.shivam.urlshortenerservice.dtos.ClickEventResponse;
 import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
+import com.shivam.urlshortenerservice.dtos.TopClickedResponse;
 import com.shivam.urlshortenerservice.models.ClickEvent;
-import com.shivam.urlshortenerservice.services.IClickEventService;
+import com.shivam.urlshortenerservice.services.IAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnalyticsController {
 
-    private final IClickEventService clickEventService;
+    private final IAnalyticsService clickEventService;
 
     @GetMapping("/{shortCode}/click-count")
     public ResponseEntity<AnalyticsResponse> getAnalytics(@PathVariable String shortCode,
@@ -90,5 +91,10 @@ public class AnalyticsController {
         return new ResponseEntity<>(clickStats, HttpStatus.OK);
     }
 
+    @GetMapping("/admin/top-clicked")
+    public ResponseEntity<List<TopClickedResponse>> getTopClickedUrls(
+            @RequestParam(defaultValue = "5") int count) {
+        return ResponseEntity.ok(clickEventService.getTopClickedUrls(count));
+    }
 }
 

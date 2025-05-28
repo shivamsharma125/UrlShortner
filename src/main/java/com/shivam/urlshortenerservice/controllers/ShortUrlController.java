@@ -64,5 +64,22 @@ public class ShortUrlController {
 
         return ResponseEntity.ok(shortUrlResponsePage);
     }
+
+    @GetMapping("/admin/urls")
+    public ResponseEntity<Page<ShortUrlResponse>> getAllUrls(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<ShortUrl> shortUrlPage = shortUrlService.getAllShortUrls(page, size);
+        Page<ShortUrlResponse> shortUrlResponsePage = shortUrlPage.map(ShortUrlUtil::from);
+        return ResponseEntity.ok(shortUrlResponsePage);
+    }
+
+    @DeleteMapping("/admin/{shortCode}")
+    public ResponseEntity<Void> deleteAsAdmin(@PathVariable String shortCode,
+                                              Authentication authentication) {
+        String adminEmail = authentication.getName();
+        shortUrlService.deleteShortUrlAsAdmin(shortCode, adminEmail);
+        return ResponseEntity.noContent().build();
+    }
 }
 

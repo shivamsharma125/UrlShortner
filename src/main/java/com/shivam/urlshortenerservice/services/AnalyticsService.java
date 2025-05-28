@@ -1,13 +1,14 @@
 package com.shivam.urlshortenerservice.services;
 
 import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
+import com.shivam.urlshortenerservice.dtos.TopClickedResponse;
 import com.shivam.urlshortenerservice.exceptions.ForbiddenOperationException;
 import com.shivam.urlshortenerservice.exceptions.InvalidDateFormatException;
 import com.shivam.urlshortenerservice.exceptions.ShortCodeNotFoundException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import com.shivam.urlshortenerservice.models.ShortUrl;
 import com.shivam.urlshortenerservice.models.State;
-import com.shivam.urlshortenerservice.repositories.ClickEventRepository;
+import com.shivam.urlshortenerservice.repositories.AnalyticsRepository;
 import com.shivam.urlshortenerservice.repositories.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
 import nl.basjes.parse.useragent.UserAgent;
@@ -28,11 +29,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ClickEventService implements IClickEventService {
+public class AnalyticsService implements IAnalyticsService {
 
-    private final Logger LOGGER = LoggerFactory.getLogger(ClickEventService.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(AnalyticsService.class);
 
-    private final ClickEventRepository clickEventRepository;
+    private final AnalyticsRepository clickEventRepository;
     private final ShortUrlRepository shortUrlRepository;
     private final UserAgentAnalyzer userAgentAnalyzer;
 
@@ -128,6 +129,14 @@ public class ClickEventService implements IClickEventService {
                         (Long) clickStat[1])
                 )
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TopClickedResponse> getTopClickedUrls(int count) {
+        List<Object[]> clickStats = clickEventRepository.findTopClickedUrls(count);
+        return clickStats.stream()
+                .map(clickStat -> new TopClickedResponse((String) clickStat[0], (Long) clickStat[1]))
+                .toList();
     }
 
     private void checkForShortCodeOwnership(String shortCode, String userEmail){

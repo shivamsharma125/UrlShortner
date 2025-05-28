@@ -1,6 +1,6 @@
 package com.shivam.urlshortenerservice.controllers;
 
-import com.shivam.urlshortenerservice.services.ClickEventService;
+import com.shivam.urlshortenerservice.services.AnalyticsService;
 import com.shivam.urlshortenerservice.services.IRedirectionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class RedirectionController {
     private final IRedirectionService redirectionService;
-    private final ClickEventService clickEventService;
+    private final AnalyticsService clickEventService;
 
-    public RedirectionController(IRedirectionService redirectionService, ClickEventService clickEventService) {
+    public RedirectionController(IRedirectionService redirectionService, AnalyticsService clickEventService) {
         this.redirectionService = redirectionService;
         this.clickEventService = clickEventService;
     }
@@ -35,6 +35,6 @@ public class RedirectionController {
         MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
         headers.add("Location", originalUrl);
 
-        return new ResponseEntity<>(headers, HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>("Redirecting to: " + originalUrl, headers, HttpStatus.FOUND);
     }
 }

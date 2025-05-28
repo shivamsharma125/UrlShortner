@@ -98,6 +98,25 @@ public class ShortUrlService implements IShortUrlService {
         shortUrlRepository.save(shortUrl);
     }
 
+    @Override
+    public Page<ShortUrl> getAllShortUrls(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page,size);
+        return shortUrlRepository.findAllByState(State.ACTIVE,pageRequest);
+    }
+
+    @Override
+    public void deleteShortUrlAsAdmin(String shortCode, String adminEmail) {
+        ShortUrl shortUrl = shortUrlRepository.findByShortCodeAndState(shortCode,State.ACTIVE)
+                .orElseThrow(() -> new ShortCodeNotFoundException("Short URL does not exist or deleted"));
+
+        shortUrl.setState(State.DELETED);
+
+        // Delete from cache
+        redisTemplate.delete(shortCode);
+
+        shortUrlRepository.save(shortUrl);
+    }
+
     private String generateUniqueCode() {
         String code;
         do {

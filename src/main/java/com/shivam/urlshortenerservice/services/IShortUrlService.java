@@ -8,5 +8,7 @@ public interface IShortUrlService {
     ShortUrl getShortUrl(String shortCode, String userEmail);
     Page<ShortUrl> getShortUrlsForUser(String email, int page, int size);
     void deleteShortUrl(String shortCode, String userEmail);
+    Page<ShortUrl> getAllShortUrls(int page, int size);
+    void deleteShortUrlAsAdmin(String shortCode, String adminEmail);
 }
 

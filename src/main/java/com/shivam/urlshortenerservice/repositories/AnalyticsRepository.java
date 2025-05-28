@@ -9,9 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Date;
 import java.util.List;
 
-public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
-    List<ClickEvent> findByShortUrl_ShortCode(String shortCode);
-
+public interface AnalyticsRepository extends JpaRepository<ClickEvent, Long> {
     @Query("SELECT COUNT(e) FROM ClickEvent e WHERE e.shortUrl.shortCode = :shortCode")
     long countByShortCode(String shortCode);
 
@@ -36,5 +34,12 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long> {
             "GROUP BY FUNCTION('DATE', c.clickedAt) " +
             "ORDER BY FUNCTION('DATE', c.clickedAt) ASC")
     List<Object[]> getClickCountsPerDayBetweenDates(String shortCode, Date startDate, Date endDate);
+
+    @Query("SELECT c.shortUrl.shortCode, COUNT(c) " +
+            "FROM ClickEvent c " +
+            "GROUP BY c.shortUrl.shortCode " +
+            "ORDER BY COUNT(c) DESC " +
+            "LIMIT :count")
+    List<Object[]> findTopClickedUrls(int count);
 }
 
