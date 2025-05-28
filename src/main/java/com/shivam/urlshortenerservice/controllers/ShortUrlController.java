@@ -3,27 +3,32 @@ package com.shivam.urlshortenerservice.controllers;
 import com.shivam.urlshortenerservice.dtos.ShortUrlRequest;
 import com.shivam.urlshortenerservice.dtos.ShortUrlResponse;
 import com.shivam.urlshortenerservice.models.ShortUrl;
+import com.shivam.urlshortenerservice.services.AnalyticsService;
 import com.shivam.urlshortenerservice.services.IShortUrlService;
 import com.shivam.urlshortenerservice.utils.ShortUrlUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import static com.shivam.urlshortenerservice.utils.ShortUrlUtil.from;
 
 @RestController
-@RequestMapping("/shorten")
 public class ShortUrlController {
 
     private final IShortUrlService shortUrlService;
+    private final AnalyticsService analyticsService;
 
-    public ShortUrlController(IShortUrlService shortUrlService) {
+    public ShortUrlController(IShortUrlService shortUrlService, AnalyticsService analyticsService) {
         this.shortUrlService = shortUrlService;
+        this.analyticsService = analyticsService;
     }
 
-    @PostMapping
+    @PostMapping("/shorten")
     public ResponseEntity<ShortUrlResponse> shortenUrl(@RequestBody ShortUrlRequest request,
                                                        Authentication authentication) {
 
@@ -36,6 +41,23 @@ public class ShortUrlController {
     }
 
     @GetMapping("/{shortCode}")
+    public ResponseEntity<String> redirectToOriginalUrl(@PathVariable String shortCode,
+                                                        HttpServletRequest request) {
+        String originalUrl = shortUrlService.getOriginalUrl(shortCode);
+
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        String referrer = request.getHeader("Referer");
+
+        analyticsService.logClick(shortCode,ipAddress,userAgent,referrer);
+
+        MultiValueMap<String,String> headers = new LinkedMultiValueMap<>();
+        headers.add("Location", originalUrl);
+
+        return new ResponseEntity<>("Redirecting to: " + originalUrl, headers, HttpStatus.FOUND);
+    }
+
+    @GetMapping("/shorten/{shortCode}")
     public ResponseEntity<ShortUrlResponse> getShortUrl(@PathVariable String shortCode,
                                                         Authentication authentication){
         String email = authentication.getName();
@@ -43,7 +65,7 @@ public class ShortUrlController {
         return ResponseEntity.ok(from(shortUrl));
     }
 
-    @DeleteMapping("/{shortCode}")
+    @DeleteMapping("/shorten/{shortCode}")
     public ResponseEntity<Void> deleteShortUrl(@PathVariable String shortCode,
                                                Authentication authentication) {
         String email = authentication.getName();
@@ -51,7 +73,7 @@ public class ShortUrlController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @GetMapping("/my")
+    @GetMapping("/shorten/my")
     public ResponseEntity<Page<ShortUrlResponse>> getUserShortUrls(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -65,7 +87,7 @@ public class ShortUrlController {
         return ResponseEntity.ok(shortUrlResponsePage);
     }
 
-    @GetMapping("/admin/urls")
+    @GetMapping("/shorten/admin/urls")
     public ResponseEntity<Page<ShortUrlResponse>> getAllUrls(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -74,7 +96,7 @@ public class ShortUrlController {
         return ResponseEntity.ok(shortUrlResponsePage);
     }
 
-    @DeleteMapping("/admin/{shortCode}")
+    @DeleteMapping("/shorten/admin/{shortCode}")
     public ResponseEntity<Void> deleteAsAdmin(@PathVariable String shortCode,
                                               Authentication authentication) {
         String adminEmail = authentication.getName();
