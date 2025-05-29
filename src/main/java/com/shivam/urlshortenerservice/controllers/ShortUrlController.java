@@ -2,10 +2,12 @@ package com.shivam.urlshortenerservice.controllers;
 
 import com.shivam.urlshortenerservice.dtos.ShortUrlRequest;
 import com.shivam.urlshortenerservice.dtos.ShortUrlResponse;
+import com.shivam.urlshortenerservice.exceptions.InvalidRequestException;
 import com.shivam.urlshortenerservice.models.ShortUrl;
-import com.shivam.urlshortenerservice.services.AnalyticsService;
+import com.shivam.urlshortenerservice.services.IAnalyticsService;
 import com.shivam.urlshortenerservice.services.IShortUrlService;
 import com.shivam.urlshortenerservice.utils.ShortUrlUtil;
+import com.shivam.urlshortenerservice.utils.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,9 @@ import static com.shivam.urlshortenerservice.utils.ShortUrlUtil.from;
 public class ShortUrlController {
 
     private final IShortUrlService shortUrlService;
-    private final AnalyticsService analyticsService;
+    private final IAnalyticsService analyticsService;
 
-    public ShortUrlController(IShortUrlService shortUrlService, AnalyticsService analyticsService) {
+    public ShortUrlController(IShortUrlService shortUrlService, IAnalyticsService analyticsService) {
         this.shortUrlService = shortUrlService;
         this.analyticsService = analyticsService;
     }
@@ -31,6 +33,7 @@ public class ShortUrlController {
     @PostMapping("/shorten")
     public ResponseEntity<ShortUrlResponse> shortenUrl(@RequestBody ShortUrlRequest request,
                                                        Authentication authentication) {
+        if (StringUtils.isEmpty(request.getOriginalUrl())) throw new InvalidRequestException("Invalid original url");
 
         String email = authentication.getName();
 
@@ -43,6 +46,8 @@ public class ShortUrlController {
     @GetMapping("/{shortCode}")
     public ResponseEntity<String> redirectToOriginalUrl(@PathVariable String shortCode,
                                                         HttpServletRequest request) {
+        if (StringUtils.isEmpty(shortCode)) throw new InvalidRequestException("Invalid short url");
+
         String originalUrl = shortUrlService.getOriginalUrl(shortCode);
 
         String ipAddress = request.getRemoteAddr();
@@ -60,6 +65,8 @@ public class ShortUrlController {
     @GetMapping("/shorten/{shortCode}")
     public ResponseEntity<ShortUrlResponse> getShortUrl(@PathVariable String shortCode,
                                                         Authentication authentication){
+        if (StringUtils.isEmpty(shortCode)) throw new InvalidRequestException("Invalid short code");
+
         String email = authentication.getName();
         ShortUrl shortUrl = shortUrlService.getShortUrl(shortCode,email);
         return ResponseEntity.ok(from(shortUrl));
@@ -68,6 +75,8 @@ public class ShortUrlController {
     @DeleteMapping("/shorten/{shortCode}")
     public ResponseEntity<Void> deleteShortUrl(@PathVariable String shortCode,
                                                Authentication authentication) {
+        if (StringUtils.isEmpty(shortCode)) throw new InvalidRequestException("Invalid short code");
+
         String email = authentication.getName();
         shortUrlService.deleteShortUrl(shortCode, email);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -99,6 +108,8 @@ public class ShortUrlController {
     @DeleteMapping("/shorten/admin/{shortCode}")
     public ResponseEntity<Void> deleteAsAdmin(@PathVariable String shortCode,
                                               Authentication authentication) {
+        if (StringUtils.isEmpty(shortCode)) throw new InvalidRequestException("Invalid short code");
+
         String adminEmail = authentication.getName();
         shortUrlService.deleteShortUrlAsAdmin(shortCode, adminEmail);
         return ResponseEntity.noContent().build();

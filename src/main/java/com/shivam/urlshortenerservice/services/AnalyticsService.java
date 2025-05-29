@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class AnalyticsService implements IAnalyticsService {
 
     private final Logger LOGGER = LoggerFactory.getLogger(AnalyticsService.class);
@@ -36,6 +35,12 @@ public class AnalyticsService implements IAnalyticsService {
     private final AnalyticsRepository analyticsRepository;
     private final ShortUrlRepository shortUrlRepository;
     private final UserAgentAnalyzer userAgentAnalyzer;
+
+    public AnalyticsService(AnalyticsRepository analyticsRepository, ShortUrlRepository shortUrlRepository, UserAgentAnalyzer userAgentAnalyzer) {
+        this.analyticsRepository = analyticsRepository;
+        this.shortUrlRepository = shortUrlRepository;
+        this.userAgentAnalyzer = userAgentAnalyzer;
+    }
 
     @Override
     public void logClick(String shortCode, String ipAddress, String userAgentString, String referrer) {
