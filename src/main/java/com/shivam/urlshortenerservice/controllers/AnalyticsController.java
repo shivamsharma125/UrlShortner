@@ -4,8 +4,10 @@ import com.shivam.urlshortenerservice.dtos.AnalyticsResponse;
 import com.shivam.urlshortenerservice.dtos.ClickEventResponse;
 import com.shivam.urlshortenerservice.dtos.ClickStatsResponse;
 import com.shivam.urlshortenerservice.dtos.TopClickedResponse;
+import com.shivam.urlshortenerservice.exceptions.InvalidRequestException;
 import com.shivam.urlshortenerservice.models.ClickEvent;
 import com.shivam.urlshortenerservice.services.IAnalyticsService;
+import com.shivam.urlshortenerservice.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -81,13 +83,18 @@ public class AnalyticsController {
     @GetMapping("/{shortCode}/click-events/range")
     public ResponseEntity<List<ClickStatsResponse>> getClickStatsInRange(
             @PathVariable String shortCode,
-            @RequestParam String start, // Format : yyyy-MM-dd
-            @RequestParam String end, // Format : yyyy-MM-dd
+            @RequestParam String startDate, // Format : yyyy-MM-dd
+            @RequestParam String endDate, // Format : yyyy-MM-dd
             Authentication authentication
     ) {
+        if (!DateUtils.validDate(startDate)) throw new InvalidRequestException("Invalid start date");
+        if (!DateUtils.validDate(endDate)) throw new InvalidRequestException("Invalid end date");
+        if (!DateUtils.isDateRangeValid(startDate,endDate))
+            throw new InvalidRequestException("Invalid start or end date");
+
         String email = authentication.getName();
         List<ClickStatsResponse> clickStats = analyticsService
-                .getStatsInDateRange(shortCode, start, end, email);
+                .getStatsInDateRange(shortCode, startDate, endDate, email);
         return new ResponseEntity<>(clickStats, HttpStatus.OK);
     }
 
