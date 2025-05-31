@@ -8,7 +8,7 @@ import java.security.SecureRandom;
 public class ShortUrlUtil {
     private static final String BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static final SecureRandom random = new SecureRandom();
-    private static final String baseUrl = "http://localhost:8080/";
+    public static final String baseUrl = "http://localhost:8080/";
 
     public static String generateRandomCode(int length) {
         StringBuilder sb = new StringBuilder(length);
