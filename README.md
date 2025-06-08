@@ -1,4 +1,4 @@
-# URL Shortener Service
+# URL Shortener
 
 A full-featured, secure, and scalable URL Shortener backend built using **Spring Boot**. This application supports custom aliases, expiry, analytics, JWT-based authentication, and role-based authorization.
 
